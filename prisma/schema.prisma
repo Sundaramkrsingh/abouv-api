@@ -1,0 +1,780 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "views"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["pwa"]
+}
+
+model User {
+  id                    Int                 @id @default(autoincrement())
+  phoneNumber           String              @unique
+  role                  Role                @default(JOB_SEEKER)
+  isPhoneNumberVerified Boolean             @default(false)
+  isNewUser             Boolean             @default(true)
+  isActive              Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  otp                   Int?
+  otpGeneratedAt        DateTime?
+  userRole              Int?
+  onboardingSlug        String?
+  feedbacks             Feedback[]
+  loginAttempts         LoginAttempts[]
+  Onboarding            Onboarding?
+  profile               Profile?
+  session               Session[]
+  stageHistory          StageHistory[]
+  TrumpsConsumption     TrumpsConsumption[]
+  careerIssue           UserCareerIssue?
+  goal                  UserGoal?
+  userQAHistory         UserQAHistory[]
+  stats                 UserStats?
+  usageFeedback         UsageFeedback[]
+
+  @@schema("pwa")
+}
+
+model Session {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  ipAddress   String
+  userAgent   String
+  token       String?   @unique
+  loggedOutAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expiresAt   DateTime
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model LoginAttempts {
+  id        Int                 @id @default(autoincrement())
+  userId    Int
+  email     String
+  status    LoginAttemptsStatus
+  createdAt DateTime            @default(now())
+  user      User                @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Profile {
+  id                   Int                    @id @default(autoincrement())
+  userId               Int                    @unique
+  avatar               String?
+  username             String?                @unique
+  fullName             String?
+  firstName            String?
+  lastName             String?
+  bio                  String?
+  email                String?                @unique
+  isEmailVerified      Boolean                @default(false)
+  dob                  DateTime?
+  gender               ProfileGender?
+  resume               String?
+  referredBy           Int?
+  referredUsers        Json[]
+  profileCompletion    String?
+  isProfileHidden      Boolean                @default(false)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  electivesSetAt       DateTime?
+  password             String?
+  isFirstTime          Boolean                @default(true)
+  emailNotifications   Boolean                @default(false)
+  address              Address?
+  pushNotifications    PushNotification?                
+  awardAchievement     AwardAchievement[]
+  education            Education[]
+  elective             Elective[]
+  emailVerificationOTP EmailVerificationOTP?
+  licenseCertification LicenseCertification[]
+  notifications        Notification[]
+  PasswordResetToken   PasswordResetToken?
+  user                 User                   @relation(fields: [userId], references: [id])
+  project              Project[]
+  workExperience       WorkExperience[]
+
+  @@schema("pwa")
+}
+
+model UserGoal {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  goals     Int[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Elective {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  tier1Id   Int
+  tier2Id   Int
+  tier3Id   Int[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile  @relation(fields: [profileId], references: [id])
+  tier1     Tier1    @relation(fields: [tier1Id], references: [id])
+  tier2     Tier2    @relation(fields: [tier2Id], references: [id])
+
+  @@schema("pwa")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  profileId    Int      @unique
+  line1        String?
+  country      String?
+  state        String?
+  cityDistrict String?
+  pincode      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profile      Profile  @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model WorkExperience {
+  id        Int       @id @default(autoincrement())
+  profileId Int
+  title     String
+  company   String
+  from      DateTime
+  to        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  profile   Profile   @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  profileId   Int
+  title       String
+  description String
+  url         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     Profile  @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model LicenseCertification {
+  id        Int      @id @default(autoincrement())
+  profileId Int
+  name      String
+  provider  String
+  from      DateTime
+  to        DateTime
+  url       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile  @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Education {
+  id            Int       @id @default(autoincrement())
+  profileId     Int
+  schoolCollage String
+  university    String?
+  degree        String
+  from          DateTime
+  to            DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  profile       Profile   @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model AwardAchievement {
+  id          Int      @id @default(autoincrement())
+  profileId   Int
+  title       String
+  description String
+  url         String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  profile     Profile  @relation(fields: [profileId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Tier1 {
+  id                  Int             @id @default(autoincrement())
+  name                String          @unique
+  foregroundColor     String
+  backgroundColor     String
+  isActive            Boolean         @default(true)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  cardBackgroundColor String
+  cardBorderColor     String
+  chipForegroundColor String
+  Elective            Elective[]
+  question            Question[]
+  tier2               Tier2[]
+  userQAHistory       UserQAHistory[]
+
+  @@schema("pwa")
+}
+
+model Tier2 {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  tier1Id       Int
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  descriptions  String?
+  Elective      Elective[]
+  question      Question[]
+  tier1         Tier1           @relation(fields: [tier1Id], references: [id])
+  tier3         Tier3[]
+  userQAHistory UserQAHistory[]
+
+  @@schema("pwa")
+}
+
+model Tier3 {
+  id            Int             @id @default(autoincrement())
+  name          String         
+  tier2Id       Int
+  isActive      Boolean         @default(true)
+  descriptionShort  String?
+  descriptionLong   String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  question      Question[]
+  tier2         Tier2           @relation(fields: [tier2Id], references: [id])
+  userQAHistory UserQAHistory[]
+  TraitType     TraitType[]
+  Tests         Tests[]
+
+  @@unique([name, tier2Id])
+
+  @@schema("pwa")
+}
+
+model QuestionTag {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("pwa")
+}
+
+model QuestionTrait {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  isActive  Boolean    @default(true)
+  questions Question[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@schema("pwa")
+}
+
+model Taxonomy {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  isActive  Boolean    @default(true)
+  Question  Question[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@schema("pwa")
+}
+
+model Question {
+  id                       Int                       @id @default(autoincrement())
+  type                     QuestionType
+  tier1Id                  Int
+  tier2Id                  Int
+  tier3Id                  Int
+  staticDL                 Int?
+  dynamicDL                Int?
+  tags                     Int[]
+  qTraitId                 Int?
+  taxonomyId               Int?
+  isPublished              Boolean                   @default(true)
+  avgTime                  Decimal?                  @db.Decimal(3, 1)
+  accuracy                 Int?
+  timeLimit                Int
+  isActive                 Boolean                   @default(true)
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  feedbacks                Feedback[]
+  mCQQA                    MCQQA?
+  mCQPsychometricQA        MCQPsychometricQA?
+  mCQPsychometricOptionsQA MCQPsychometricOptionsQA?
+  qAHistory                QAHistory[]
+  tier1                    Tier1                     @relation(fields: [tier1Id], references: [id])
+  tier2                    Tier2                     @relation(fields: [tier2Id], references: [id])
+  tier3                    Tier3                     @relation(fields: [tier3Id], references: [id])
+  qtrait                   QuestionTrait?            @relation(fields: [qTraitId], references: [id])
+  taxonomy                 Taxonomy?                 @relation(fields: [taxonomyId], references: [id])
+  userQAHistory            UserQAHistory[]
+
+  @@schema("pwa")
+}
+
+model MCQQA {
+  id            Int      @id @default(autoincrement())
+  questionId    Int      @unique
+  text          String   @unique
+  options       Json[]
+  stick         Int?
+  answer        String   @unique
+  triviaContent String
+  imageUrl      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  question      Question @relation(fields: [questionId], references: [id])
+
+  @@schema("pwa")
+}
+
+model MCQPsychometricQA {
+  id          Int       @id @default(autoincrement())
+  questionId  Int       @unique
+  traitTypeId Int
+  text        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  question    Question  @relation(fields: [questionId], references: [id])
+  traitType   TraitType @relation(fields: [traitTypeId], references: [id])
+
+  @@schema("pwa")
+}
+
+model MCQPsychometricOptionsQA {
+  id         Int      @id @default(autoincrement())
+  questionId Int      @unique
+  text       String   @unique
+  options    Json[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  question   Question @relation(fields: [questionId], references: [id])
+
+  @@schema("pwa")
+}
+
+model TraitType {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  tier3Id           Int
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  tier3             Tier3               @relation(fields: [tier3Id], references: [id])
+  MCQPsychometricQA MCQPsychometricQA[]
+
+  @@schema("pwa")
+}
+
+model Feedback {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  questionId Int
+  isPositive Boolean?
+  comment    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  question   Question @relation(fields: [questionId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model UsageFeedback {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  comment    String?
+  imageKey   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model TriviaSetting {
+  id                       Int      @id @default(autoincrement())
+  correctResponseHeading   String[]
+  incorrectResponseHeading String[]
+  contentHeading           String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@schema("pwa")
+}
+
+model QAHistory {
+  id          Int      @id @default(autoincrement())
+  questionId  Int
+  text        String?
+  url         String?
+  options     Json[]
+  answer      String?
+  staticDL    Int?
+  tags        Int[]
+  isPublished Boolean?
+  createdAt   DateTime @default(now())
+  question    Question @relation(fields: [questionId], references: [id])
+
+  @@schema("pwa")
+}
+
+model UserQAHistory {
+  id                Int          @id @default(autoincrement())
+  userId            Int
+  day               Int          @default(0)
+  stageId           Int
+  gradeId           Int
+  tier1Id           Int
+  tier2Id           Int
+  tier3Id           Int
+  testType          TestType
+  questionId        Int
+  currentQuestionNo Int
+  noOfAttempts      Int          @default(1)
+  timeSpent         Int?
+  isQuestionSkipped Boolean      @default(false)
+  isCorrect         Boolean?
+  score             Int
+  optionId          String?
+  traitIdSelection  Int?
+  traitStat         Json?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  gradeSetting      GradeSetting @relation(fields: [gradeId], references: [id])
+  question          Question     @relation(fields: [questionId], references: [id])
+  stageSetting      StageSetting @relation(fields: [stageId], references: [id])
+  tier1             Tier1        @relation(fields: [tier1Id], references: [id])
+  tier2             Tier2        @relation(fields: [tier2Id], references: [id])
+  tier3             Tier3        @relation(fields: [tier3Id], references: [id])
+  user              User         @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model StageHistory {
+  id                  Int          @id @default(autoincrement())
+  userId              Int
+  day                 Int
+  stageId             Int
+  gradeId             Int
+  tier1               Int[]
+  tier2               Int[]
+  tier3               Int[]
+  testStatus          TestStatus
+  questionTypes       String[]
+  totalQuestions      Int
+  totalCorrectAnswers Int
+  totalTimeSpent      Int
+  totalScore          Int
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  questionSet         Json[]
+  gradeSetting        GradeSetting @relation(fields: [gradeId], references: [id])
+  stageSetting        StageSetting @relation(fields: [stageId], references: [id])
+  user                User         @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model UserStats {
+  id           Int    @id @default(autoincrement())
+  userId       Int    @unique
+  currentStage String
+  currentGrade String
+  netScore     Int
+  user         User   @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model TrumpSetting {
+  id                Int                 @id @default(autoincrement())
+  type              TrumpType
+  text              String              @unique
+  codeName          TrumpCodeName       @unique
+  TrumpsConsumption TrumpsConsumption[]
+
+  @@schema("pwa")
+}
+
+model StageSetting {
+  id                  Int             @id @default(autoincrement())
+  name                String
+  level               String          @unique
+  startDay            Int
+  endDay              Int
+  days                Int
+  questionSelectionDL Int
+  totalQuestions      Int
+  timeLimit           Int
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  stageHistory        StageHistory[]
+  userQAHistory       UserQAHistory[]
+
+  @@schema("pwa")
+}
+
+model GradeSetting {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
+  level         String          @unique
+  minPercentage Int
+  maxPercentage Int
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  stageHistory  StageHistory[]
+  userQAHistory UserQAHistory[]
+
+  @@schema("pwa")
+}
+
+model GoalSetting {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  @@schema("pwa")
+}
+
+model Onboarding {
+  id                 Int    @id @default(autoincrement())
+  acquisitionChannel String
+  userId             Int    @unique
+  user               User   @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model TrumpsConsumption {
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  powerUpId    Int
+  isLocked     Boolean      @default(false)
+  isConsumed   Boolean      @default(false)
+  nextIn       Int
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  trumpSetting TrumpSetting @relation(fields: [powerUpId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model RoleSetting {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  @@schema("pwa")
+}
+
+model HearAbtUsSetting {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  @@schema("pwa")
+}
+
+model UserCareerIssue {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  careerIssues Int[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model CareerIssueSetting {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  @@schema("pwa")
+}
+
+model EmailVerificationOTP {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  otp       String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+  profile   Profile  @relation(fields: [userId], references: [userId])
+
+  @@schema("pwa")
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+  user      Profile  @relation(fields: [userId], references: [id])
+
+  @@schema("pwa")
+}
+
+model Quote {
+  id           Int      @id @default(autoincrement())
+  quote        String   @unique
+  displayCount Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@schema("pwa")
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  message   String
+  userId    Int
+  type      NotificationType
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  profile   Profile          @relation(fields: [userId], references: [userId])
+
+  @@schema("pwa")
+}
+
+/// The underlying view does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+view scoresview {
+  tier1id    Int?
+  tiername   String?
+  stagelevel String?
+  score      Int?
+
+  @@ignore
+  @@schema("pwa")
+}
+
+enum Role {
+  JOB_SEEKER
+  EMPLOYER
+
+  @@schema("pwa")
+}
+
+enum LoginAttemptsStatus {
+  SUCCESS
+  FAILURE
+
+  @@schema("pwa")
+}
+
+enum ProfileGender {
+  MALE
+  FEMALE
+  RATHER_NOT_TO_SAY
+
+  @@schema("pwa")
+}
+
+enum QuestionType {
+  MCQ
+  MCQPSY
+  MCQPSYOPTION
+  
+  @@schema("pwa")
+}
+
+enum TestType {
+  MIXED_MODE
+
+  @@schema("pwa")
+}
+
+enum TestStatus {
+  IN_PROGRESS
+  COMPLETED
+
+  @@schema("pwa")
+}
+
+enum TrumpType {
+  POWER_UPS
+  WILDCARD
+
+  @@schema("pwa")
+}
+
+enum TrumpCodeName {
+  PLUS_5_SECONDS
+  PLUS_10_SECONDS
+  TWICE_UP
+  THRICE_UP
+  DICE_UP
+  ASK_ABA
+  BETTER_HALF
+  CHOSEN_ONE
+  DOUBLE_EDGE
+  TIME_MACHINE
+
+  @@schema("pwa")
+}
+
+enum NotificationType {
+  MESSAGE
+  ALERT
+  REMINDER
+
+  @@schema("pwa")
+}
+
+view ScoresView {
+  tier1Id    Int
+  tier1Name  String
+  stageLevel String
+  score      Int?
+
+  @@id([tier1Id, stageLevel])
+  @@map("ScoresView")
+  @@schema("pwa")
+}
+
+model Tests {
+  id            Int      @id @default(autoincrement())
+  tier3Id       Int
+  abstract      String
+  brief         String
+  level         String?
+  totalQuestion Int
+  tier3         Tier3  @relation(fields: [tier3Id], references: [id])
+
+  @@schema("pwa")
+}
+
+model PushNotification {
+  id           Int      @default(autoincrement())
+  userId       Int      @unique
+  subscription Json    
+  createdAt    DateTime @default(now())
+  profile      Profile  @relation(fields: [userId], references: [userId])  
+
+  @@schema("pwa")
+}
